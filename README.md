@@ -17,6 +17,11 @@ The agent:
 3. **Generates a response** grounded only in the retrieved content — no hallucinations
 4. **Escalates to a human agent** when it can't help, and generates a structured handoff summary
 
+### 🌟 Bonus Features Implemented (From Assignment Rubric)
+* **Sentiment Analysis**: Tracks Positive/Neutral/Negative emotional states alongside persona detection.
+* **Confidence Scoring**: Displays real-time cosine similarity match percentages in the UI.
+* **Human Approval Workflow**: Bypasses generation and constructs structured JSON handoff payloads for human ticketing systems.
+
 ---
 
 ## Architecture
@@ -205,6 +210,7 @@ Opens at: http://localhost:8501
 
 Each incoming message is sent to Gemini with a structured classification prompt and a JSON response schema. The model returns:
 - `persona`: one of the three classes (exact string match enforced by schema)
+- `sentiment`: Positive, Neutral, or Negative
 - `confidence`: 0.0–1.0 float
 - `reasoning`: short justification
 
