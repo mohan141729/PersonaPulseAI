@@ -268,17 +268,3 @@ On escalation, a structured JSON handoff payload is generated containing: detect
 
 ---
 
-## Demo Video Coverage
-
-1. Project structure walkthrough
-2. Document ingestion (`python ingest.py`)
-3. Persona detection across all three user types
-4. RAG retrieval with source display
-5. Five or more distinct query examples
-6. Escalation scenario (billing dispute)
-7. Handoff JSON generation
-8. Design decision explanation: why ChromaDB cosine similarity over L2 distance
-
----
-
-*Final Year B.Tech Project · AI/ML Track · 2024–25*
