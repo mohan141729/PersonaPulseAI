@@ -1,99 +1,77 @@
-# PersonaPulseAI 🤖
+# PersonaPulseAI
 
-**A Persona-Adaptive Customer Support Agent using LLMs, RAG, and Human Escalation**
+**Persona-Adaptive Customer Support Agent** — powered by Gemini, RAG, and intelligent human escalation.
 
-> Final Year B.Tech Project | AI/ML Track  
-> Built with: Python · Google Gemini · ChromaDB · LangChain · Streamlit
+> Final Year B.Tech Project · AI/ML Track · 2024–25
 
 ---
 
-## What This Does
+## Overview
 
-PersonaPulseAI is an intelligent customer support chatbot that doesn't treat every user the same way. Before generating a response, it first figures out *who it's talking to* — a developer debugging an API issue, an frustrated end-user who's been stuck for hours, or a business executive who just wants a quick answer. Then it adapts its tone and response style accordingly.
+Most chatbots treat every user identically. PersonaPulseAI doesn't.
 
-The agent:
-1. **Detects your persona** from the language you use (via Gemini + structured JSON output)
-2. **Retrieves relevant docs** from a knowledge base using semantic vector search (ChromaDB + Gemini embeddings)
-3. **Generates a response** grounded only in the retrieved content — no hallucinations
-4. **Escalates to a human agent** when it can't help, and generates a structured handoff summary
+Before generating a single word, it identifies *who it's talking to* — a developer debugging an API issue, a frustrated end-user who's been stuck for hours, or a business executive who needs a quick, high-level answer. The response is then tailored in tone, depth, and format to match that person.
 
-### 🌟 Bonus Features Implemented (From Assignment Rubric)
-* **Sentiment Analysis**: Tracks Positive/Neutral/Negative emotional states alongside persona detection.
-* **Confidence Scoring**: Displays real-time cosine similarity match percentages in the UI.
-* **Human Approval Workflow**: Bypasses generation and constructs structured JSON handoff payloads for human ticketing systems.
+**Core capabilities:**
+
+- **Persona detection** — classifies users as Technical Expert, Frustrated User, or Business Executive using Gemini's structured JSON output
+- **Retrieval-Augmented Generation (RAG)** — answers are grounded in a 15-document knowledge base via ChromaDB semantic search, not LLM hallucination
+- **Sentiment tracking** — detects Positive / Neutral / Negative emotional state alongside persona
+- **Confidence scoring** — displays real-time cosine similarity scores so users know how well the knowledge base matched their query
+- **Human escalation** — automatically routes to a human agent when confidence is low or the situation requires it, generating a structured JSON handoff payload
 
 ---
 
 ## Architecture
 
 ```
-┌─────────────────────┐
-│  User Enters Query  │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│ Persona Detection   │
-│                     │
-│ Technical Expert    │
-│ Frustrated User     │
-│ Business Executive  │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│ Query Embedding     │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│ ChromaDB Retrieval  │
-│ Retrieve Top-K Docs │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│ Confidence Check    │
-└──────┬───────┬──────┘
-       │       │
-       │High   │Low
-       │       │
-       ▼       ▼
-┌──────────┐ ┌─────────────────┐
-│Adaptive  │ │Escalation Engine│
-│Response  │ └────────┬────────┘
-└────┬─────┘          │
-     │                ▼
-     │      ┌──────────────────┐
-     │      │ Human Handoff    │
-     │      │ Summary Creation │
-     │      └────────┬─────────┘
-     │               │
-     ▼               ▼
-┌─────────────────────────────┐
-│ Display Final Response      │
-│ Persona                     │
-│ Sources Used                │
-│ Confidence Score            │
-│ Escalation Status           │
-└─────────────────────────────┘
+User Query
+    │
+    ▼
+Persona Detection (Gemini)
+    │ Technical Expert / Frustrated User / Business Executive
+    ▼
+Query Embedding (text-embedding-004)
+    │
+    ▼
+ChromaDB Vector Retrieval (Top-3 chunks, cosine similarity)
+    │
+    ▼
+Confidence Check
+    ├── High confidence ──► Adaptive Response Generation
+    │                            │
+    │                            ▼
+    │                       Persona-tuned reply
+    │
+    └── Low confidence ───► Escalation Engine
+                                 │
+                                 ▼
+                            Human Handoff JSON
+                            (summary, docs searched,
+                             issue context, recommended action)
+    │
+    ▼
+Response displayed with:
+  · Detected persona & sentiment
+  · Source documents used
+  · Confidence score
+  · Escalation status (if triggered)
 ```
 
 ---
 
 ## Tech Stack
 
-| Component | Library / Tool | Version |
-|-----------|---------------|---------|
+| Layer | Tool | Version |
+|---|---|---|
 | Language | Python | 3.11+ |
-| LLM + Embeddings | `google-genai` (Gemini 2.0 Flash) | ≥ 0.8.0 |
-| Embedding Model | `text-embedding-004` | — |
-| Vector Database | `chromadb` (persistent, cosine similarity) | ≥ 0.5.0 |
-| Document Chunking | `langchain` RecursiveCharacterTextSplitter | ≥ 0.2.0 |
-| PDF Parsing | `pypdf` | ≥ 4.2.0 |
-| PDF Generation | `fpdf2` | ≥ 2.7.9 |
-| Web UI | `streamlit` | ≥ 1.35.0 |
-| Env Config | `python-dotenv` | ≥ 1.0.0 |
+| LLM & Embeddings | Google Gemini 2.0 Flash + `text-embedding-004` | `google-genai ≥ 0.8.0` |
+| Vector Store | ChromaDB (persistent, cosine space) | `≥ 0.5.0` |
+| Document Chunking | LangChain `RecursiveCharacterTextSplitter` | `≥ 0.2.0` |
+| PDF Parsing | pypdf | `≥ 4.2.0` |
+| PDF Generation | fpdf2 | `≥ 2.7.9` |
+| Web UI | Streamlit | `≥ 1.35.0` |
+| Config | python-dotenv | `≥ 1.0.0` |
 
 ---
 
@@ -101,198 +79,206 @@ The agent:
 
 ```
 PersonaPulseAI/
-│
 ├── data/                          # Knowledge base (15 documents)
 │   ├── api_authentication_guide.md
-│   ├── password_reset_guide.md
-│   ├── billing_refund_policy.md
-│   ├── service_level_agreement.md
 │   ├── api_rate_limits.md
+│   ├── billing_refund_policy.md
 │   ├── data_privacy_gdpr.md
-│   ├── troubleshooting_errors.md
-│   ├── integration_setup_guide.md
-│   ├── performance_optimization.md
-│   ├── two_factor_authentication.md
-│   ├── team_user_management.md
-│   ├── webhooks_configuration.md
 │   ├── downtime_maintenance_policy.md
+│   ├── integration_setup_guide.md
 │   ├── mobile_app_support.md
-│   └── password_reset_guide.pdf   ← required PDF (generated by create_pdf.py)
+│   ├── password_reset_guide.md
+│   ├── password_reset_guide.pdf   ← generated by create_pdf.py
+│   ├── performance_optimization.md
+│   ├── service_level_agreement.md
+│   ├── team_user_management.md
+│   ├── troubleshooting_errors.md
+│   ├── two_factor_authentication.md
+│   └── webhooks_configuration.md
 │
 ├── src/
 │   ├── __init__.py
-│   ├── config.py          # all settings + thresholds
-│   ├── classifier.py      # persona detection via Gemini
-│   ├── rag_pipeline.py    # ChromaDB + embeddings + retrieval
-│   ├── generator.py       # persona-adapted response generation
-│   └── escalator.py       # escalation logic + handoff JSON
+│   ├── config.py          # Settings and thresholds
+│   ├── classifier.py      # Persona detection via Gemini
+│   ├── rag_pipeline.py    # Embeddings, retrieval, ChromaDB
+│   ├── generator.py       # Persona-adapted response generation
+│   └── escalator.py       # Escalation logic and handoff JSON
 │
-├── app.py                 # Streamlit web UI (main entry point)
-├── ingest.py              # standalone ingestion script
-├── create_pdf.py          # generates the required PDF doc
+├── app.py                 # Streamlit UI (entry point)
+├── ingest.py              # One-time document ingestion script
+├── create_pdf.py          # Generates the required PDF document
 ├── requirements.txt
-├── .env.example           # template for API keys
+├── .env.example
 ├── .gitignore
 └── README.md
 ```
 
 ---
 
-## Setup Instructions
+## Setup
 
-### 1. Clone the repository
+### Prerequisites
+
+- Python 3.11+
+- A free Gemini API key from [aistudio.google.com](https://aistudio.google.com/app/apikey)
+
+### Steps
+
+**1. Clone the repo**
 ```bash
 git clone https://github.com/YOUR_USERNAME/PersonaPulseAI.git
 cd PersonaPulseAI
 ```
 
-### 2. Create a virtual environment
+**2. Create and activate a virtual environment**
 ```bash
 python -m venv venv
 
 # Windows
 venv\Scripts\activate
 
-# macOS/Linux
+# macOS / Linux
 source venv/bin/activate
 ```
 
-### 3. Install dependencies
+**3. Install dependencies**
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Set up your API key
-Copy the example env file and add your Gemini API key:
+**4. Configure your API key**
 ```bash
-copy .env.example .env     # Windows
-cp .env.example .env       # macOS/Linux
+# Windows
+copy .env.example .env
+
+# macOS / Linux
+cp .env.example .env
 ```
 
-Open `.env` and set:
+Open `.env` and set your key:
 ```
 GEMINI_API_KEY=your_actual_key_here
 ```
 
-Get a free API key at: https://aistudio.google.com/app/apikey
-
-### 5. Generate the PDF knowledge base document
+**5. Generate the PDF knowledge base document**
 ```bash
 python create_pdf.py
 ```
 
-### 6. Ingest documents into ChromaDB
+**6. Ingest documents into ChromaDB**
 ```bash
 python ingest.py
 ```
-This takes 1–3 minutes on first run (embedding ~100+ chunks via API).
-After this, ChromaDB saves the index to `chroma_db/` — no re-indexing on future runs.
 
-### 7. Run the app
+This embeds ~100+ chunks via the Gemini API and saves the index to `chroma_db/`. It takes 1–3 minutes on first run. Subsequent runs skip re-indexing entirely.
+
+**7. Launch the app**
 ```bash
 streamlit run app.py
 ```
 
-Opens at: http://localhost:8501
+App opens at: `http://localhost:8501`
 
 ---
 
 ## Environment Variables
 
 | Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `GEMINI_API_KEY` | ✅ Yes | — | Google Gemini API key |
-| `GEMINI_MODEL` | No | `gemini-2.0-flash` | Model name to use |
+|---|---|---|---|
+| `GEMINI_API_KEY` | Yes | — | Your Google Gemini API key |
+| `GEMINI_MODEL` | No | `gemini-2.0-flash` | Model to use for generation |
 
 ---
 
-## Persona Detection Strategy
+## How Persona Detection Works
 
-Each incoming message is sent to Gemini with a structured classification prompt and a JSON response schema. The model returns:
-- `persona`: one of the three classes (exact string match enforced by schema)
-- `sentiment`: Positive, Neutral, or Negative
-- `confidence`: 0.0–1.0 float
-- `reasoning`: short justification
+Each message is sent to Gemini with a structured classification prompt. The response is enforced as valid JSON using `response_mime_type="application/json"` with a defined schema — no regex parsing, no retry loops.
 
-**Why Gemini structured output?**  
-Using `response_mime_type="application/json"` with a schema enforces valid, parseable JSON every time — no regex parsing or retry loops needed.
+The model returns four fields every time:
 
-**Fallback:** If the API call fails for any reason, a keyword-scoring heuristic is used (technical jargon → Technical Expert, exclamation marks → Frustrated User, business terms → Business Executive).
+| Field | Type | Description |
+|---|---|---|
+| `persona` | string | `Technical Expert`, `Frustrated User`, or `Business Executive` |
+| `sentiment` | string | `Positive`, `Neutral`, or `Negative` |
+| `confidence` | float | 0.0 – 1.0 |
+| `reasoning` | string | Short justification for the classification |
+
+**Fallback:** If the API call fails, a keyword-scoring heuristic takes over — technical jargon signals Technical Expert, exclamation marks signal Frustrated User, and business terms signal Business Executive.
 
 ---
 
 ## RAG Pipeline Design
 
 | Setting | Value | Rationale |
-|---------|-------|-----------|
-| Chunk size | 400 characters | Small enough for single-topic chunks |
-| Overlap | 40 characters | Prevents context from being cut mid-sentence |
-| Splitter | RecursiveCharacterTextSplitter | Respects paragraph → sentence → word hierarchy |
-| Embedding model | `text-embedding-004` | Best semantic quality in Gemini family |
-| Vector DB | ChromaDB (cosine space) | Local, persistent, no infra needed |
-| Top-k | 3 chunks | Enough context without overwhelming the prompt |
+|---|---|---|
+| Chunk size | 400 characters | Small enough to stay on a single topic |
+| Chunk overlap | 40 characters | Prevents context being cut mid-sentence |
+| Splitter | `RecursiveCharacterTextSplitter` | Respects paragraph → sentence → word hierarchy |
+| Embedding model | `text-embedding-004` | Best semantic quality in the Gemini family |
+| Vector store | ChromaDB (cosine space) | Local, persistent, no infrastructure needed |
+| Top-k | 3 chunks | Sufficient context without overwhelming the prompt |
 
-**Confidence score = 1 - cosine_distance** (ChromaDB with `hnsw:space=cosine` returns distances in [0,1])
+**Confidence score** = `1 − cosine_distance`. ChromaDB with `hnsw:space=cosine` returns distances in [0, 1], so this gives an intuitive 0–100% match percentage.
 
 ---
 
 ## Escalation Logic
 
-Escalation triggers (all configurable in `src/config.py`):
+When the system can't give a reliable answer, it hands off to a human agent rather than guessing. All thresholds are configurable in `src/config.py`.
 
 | Trigger | Condition |
-|---------|-----------|
-| `NO_DOCUMENTS` | Zero chunks retrieved |
-| `LOW_CONFIDENCE` | Best chunk score < 0.40 |
+|---|---|
+| `NO_DOCUMENTS` | Zero chunks retrieved from the knowledge base |
+| `LOW_CONFIDENCE` | Best chunk score below 0.40 |
 | `BILLING_DISPUTE` | Message contains billing dispute keywords |
-| `SENSITIVE_KEYWORD` | Legal/fraud/security keywords detected |
-| `REPEATED_FRUSTRATION` | Frustrated User persona for ≥ 3 consecutive turns |
+| `SENSITIVE_KEYWORD` | Legal, fraud, or security-related terms detected |
+| `REPEATED_FRUSTRATION` | Frustrated User persona detected for 3+ consecutive turns |
 
-When escalated, a JSON handoff summary is generated containing: persona, issue summary, documents searched, confidence score, attempted steps from conversation history, and recommended action for the human agent.
+On escalation, a structured JSON handoff payload is generated containing: detected persona, issue summary, documents searched, confidence score, conversation history, and a recommended action for the human agent.
 
 ---
 
 ## Example Queries
 
-Try these in the chat:
-
-| # | Query | Expected Persona | Behavior |
-|---|-------|-----------------|----------|
-| 1 | *"Our API key is returning 401 Unauthorized. The OAuth token refresh endpoint isn't issuing a new bearer token."* | Technical Expert | Detailed auth troubleshooting with code examples |
-| 2 | *"I've been trying to reset my password for 2 hours and NOTHING works!! The emails never arrive!!"* | Frustrated User | Empathetic response with simple numbered steps |
-| 3 | *"What's our SLA commitment and how does the current downtime affect our operations?"* | Business Executive | Concise, impact-focused, timeline-oriented |
-| 4 | *"How do I set up webhook signature validation in Python?"* | Technical Expert | Code examples from the webhooks documentation |
-| 5 | *"I've been charged twice this month! I demand an immediate refund!!"* | Frustrated User | **Triggers escalation** (billing dispute keyword) |
-| 6 | *"Can you explain the JWT token validation flow and which signing algorithm you use?"* | Technical Expert | Detailed JWT/RS256 explanation |
-| 7 | *"This is absolutely ridiculous, nothing has worked for 3 days!"* | Frustrated User | Empathetic + escalates after 3 frustrated turns |
+| Query | Expected Persona | Behavior |
+|---|---|---|
+| *"Our API key is returning 401 Unauthorized. The OAuth token refresh endpoint isn't issuing a new bearer token."* | Technical Expert | Detailed auth troubleshooting with code examples |
+| *"I've been trying to reset my password for 2 hours and NOTHING works!! The emails never arrive!!"* | Frustrated User | Empathetic response, simple numbered steps |
+| *"What's our SLA commitment and how does the current downtime affect our operations?"* | Business Executive | Concise, impact-focused, timeline-oriented |
+| *"How do I set up webhook signature validation in Python?"* | Technical Expert | Code examples from webhooks documentation |
+| *"I've been charged twice this month! I demand an immediate refund!!"* | Frustrated User | Triggers escalation (billing dispute keyword) |
+| *"Can you explain the JWT token validation flow and which signing algorithm you use?"* | Technical Expert | Detailed JWT/RS256 explanation |
+| *"This is absolutely ridiculous, nothing has worked for 3 days!"* | Frustrated User | Empathetic response + escalates after 3 frustrated turns |
 
 ---
 
 ## Known Limitations
 
-- **Embedding speed:** First-run indexing calls the API for each chunk, which takes time. A local embedding model (e.g., Sentence Transformers) would be faster but less accurate.
-- **PDF extraction:** `pypdf` struggles with heavily formatted PDFs or scanned documents — plain text PDFs work fine.
-- **Session memory:** Conversation history is stored in Streamlit's session state and resets on page refresh. A database (SQLite/Redis) would be needed for persistent memory.
-- **Persona misclassification:** Short or ambiguous messages can confuse the classifier. The keyword fallback helps but isn't perfect.
-- **Rate limits:** The Gemini free tier has request limits — if you hit them during indexing, exponential backoff in `_get_embedding()` will retry, but it adds delay.
-- **No authentication:** The app has no login system — anyone with the URL can use it.
+**Embedding speed** — First-run indexing calls the Gemini API per chunk, which takes a few minutes. A local embedding model (e.g., Sentence Transformers) would be faster, though likely less accurate.
+
+**PDF extraction** — `pypdf` struggles with heavily formatted or scanned PDFs. Plain text PDFs work reliably.
+
+**Session memory** — Conversation history lives in Streamlit's session state and resets on page refresh. Persistent memory would require a database (SQLite, Redis, etc.).
+
+**Short messages** — Ambiguous or very short queries can confuse the classifier. The keyword fallback helps but isn't a perfect substitute.
+
+**Rate limits** — The Gemini free tier has request limits. During indexing, `_get_embedding()` includes exponential backoff and will retry automatically, but this adds delay if limits are hit.
+
+**No authentication** — The app has no login system. Anyone with the URL can access it.
 
 ---
 
-## Screen Recording
+## Demo Video Coverage
 
-The demo video covers:
 1. Project structure walkthrough
 2. Document ingestion (`python ingest.py`)
-3. Persona detection across all 3 types
-4. RAG retrieval + source display
-5. At least 5 different queries
+3. Persona detection across all three user types
+4. RAG retrieval with source display
+5. Five or more distinct query examples
 6. Escalation scenario (billing dispute)
 7. Handoff JSON generation
-8. Technical design decision explanation (why ChromaDB cosine vs. L2)
+8. Design decision explanation: why ChromaDB cosine similarity over L2 distance
 
 ---
 
-*Built as part of Final Year B.Tech project | 2024–25*
-#   P e r s o n a P u l s e A I  
- 
+*Final Year B.Tech Project · AI/ML Track · 2024–25*
